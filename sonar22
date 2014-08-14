@@ -1,0 +1,87 @@
+#!/bin/bash
+#=============================================================================
+#
+#          FILE:  sonar22
+# 
+#         USAGE:  sonar22 timeout [IP | servername]
+# 
+#   DESCRIPTION: This shell script will attempt to connect to a given
+#                server on port 22 (ssh) once every couple of seconds
+#                for the duration of 'timeout'.
+#                If it connects successfully it will play a ping every
+#                time it connects.
+#                This script can be used to give an audible signal once
+#                a connection on port 22 has been established.  This can
+#                be a useful tool for a busy system administrator. 
+# 
+#       OPTIONS:  ---
+#  REQUIREMENTS:  ---
+#          BUGS:  ---
+#         NOTES:  ---
+#        AUTHOR:  Sternix
+#       COMPANY:  
+#       VERSION:  1.0
+#       CREATED:  14/08/14 02:12:43 PM CST
+#      REVISION:  1.00
+#=============================================================================
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+control_c()
+# run if user hits control-c
+{
+  echo -en "\n*** Exiting ***\n"
+  exit $?
+}
+
+function host_check ()
+{
+	host "$1" 2> /dev/null
+	hrc=$?
+	if [[ $hrc !=  0 ]]; then
+		 echo "$1 is not a valid host."
+		exit $hrc 
+	fi
+	
+}    # ----------  end of function host_check  ----------
+
+function sonar_ping() { 
+	play -v .2 /usr/share/sounds/sonar.wav  2> /dev/null
+}
+
+# trap keyboard interrupt (control-c)
+trap control_c SIGINT
+
+function is_int() { return $(test "$@" -eq "$@" > /dev/null 2>&1); } 
+
+#-----------------------------------------------------------------------------
+#   M  A  I  N
+#-----------------------------------------------------------------------------
+if [ "$#" -ne 2 ]; then
+	printf "usage:\n\t%s timeout ip\n" "$0"
+	exit
+fi
+
+if ! is_int "$1";
+then
+	echo "First parameter must be a timeout value in seconds"
+	exit
+fi
+
+TIMEOUT=$1
+ADDRESS=$2
+
+host_check $ADDRESS;                            # check for valid host
+
+end=$TIMEOUT
+SECONDS=0
+
+printf "\n${bold}Sonar PING %s for %s seconds:${normal}\n" "$2" "$1"
+while [ $SECONDS -lt "$end" ]; do
+	nc -vvw 3 --send-only --recv-only "$ADDRESS" 22 > /dev/null 2>&1
+	if [ $? = 0 ]; then
+		sonar_ping
+	fi
+    :
+done
