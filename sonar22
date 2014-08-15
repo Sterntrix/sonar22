@@ -47,7 +47,8 @@ function host_check ()
 }    # ----------  end of function host_check  ----------
 
 function sonar_ping() { 
-	play -v .2 /usr/share/sounds/sonar.wav  2> /dev/null
+	play -v .2 ./sonar.wav  2> /dev/null
+	#play -v .2 /usr/share/sounds/sonar.wav  2> /dev/null
 }
 
 # trap keyboard interrupt (control-c)
